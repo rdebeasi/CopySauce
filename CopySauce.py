@@ -3,6 +3,7 @@ from win32com.shell import shell
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from subprocess import call
+from time import strftime
 
 defaults = {
     "web_root":"",
@@ -19,6 +20,9 @@ class ChangeHandler(FileSystemEventHandler):
         self.file_exclude_patterns = file_exclude_patterns
         self.folder_exclude_patterns = folder_exclude_patterns
         self.cmd_after_copy = cmd_after_copy
+
+    def _timestamp(self):
+        return strftime("[%I:%M:%S %p] ")
 
     def _get_directories(self, path):
         directories = []
@@ -63,7 +67,8 @@ class ChangeHandler(FileSystemEventHandler):
                 if not os.path.exists(dir):
                     os.makedirs(dir)
                 shutil.copy(src,dst)
-            print "Added   ", src.replace(self.project_path,"")
+            # include extra whitespace after "added" so that the paths line up
+            print self._timestamp(), "Added   ", src.replace(self.project_path,"")
             self.cmd_after_copy_check(dst)
         except Exception, err:
             print err
@@ -80,7 +85,7 @@ class ChangeHandler(FileSystemEventHandler):
                 if not os.path.exists(dir):
                     os.makedirs(dir)
                 shutil.copy(src,dst)
-                print "Updated ", src.replace(self.project_path,"")
+                print self._timestamp(), "Updated ", src.replace(self.project_path,"")
                 self.cmd_after_copy_check(dst)
         except Exception, err:
             print err
@@ -103,7 +108,7 @@ class ChangeHandler(FileSystemEventHandler):
                 shutil.rmtree(dst, ignore_errors=False, onerror=self._remove_readonly)
             else:
                 os.unlink(dst)
-            print "Removed ", src.replace(self.project_path,"")
+            print self._timestamp(), "Removed ", src.replace(self.project_path,"")
         except Exception, err:
             print err
 
